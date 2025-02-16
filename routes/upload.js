@@ -31,7 +31,8 @@ router.post("/upload", upload.array("images"), async (req, res) => {
         // console.log("IMAGE----------------->", imageUrls)
 
         // Call Convert-to-PDF API with image URLs
-        const pdfResponse = await axios.post("http://localhost:3000/api/convert-to-pdf", {imageUrls},{ headers: { "Content-Type": "application/json" }, responseType: "arraybuffer" });
+        const pdfResponse = await axios.post("https://react-image-pdf-backend.vercel.app/api/convert-to-pdf",
+             {imageUrls},{ headers: { "Content-Type": "application/json" }, responseType: "arraybuffer" });
 
         console.log("PDF Response:", pdfResponse);
 
