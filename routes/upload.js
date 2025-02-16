@@ -48,6 +48,9 @@ router.post("/upload", upload.array("images"), async (req, res) => {
         res.status(500).json({ error: "Failed to process images" });
     }
 });
+router.get("/", (req, res) => {
+    res.send("Upload Route");
+})
 
 
 export { router as uploadRouter };
