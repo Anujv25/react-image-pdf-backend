@@ -1,22 +1,53 @@
-import { Router } from "express";
-import multer, { memoryStorage } from "multer";
-import { convertImagesToPDF } from "../controller/pdfController.js";
+import PDFDocument from "pdfkit";
+import express from "express";
+import axios from "axios";
 
-const router = Router();
+const router = express.Router();
 
-app.use(express.json({ limit: "50mb" }));  // JSON payloads
-app.use(express.urlencoded({ limit: "50mb", extended: true })); // Form data
 
-// Multer storage
-const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB file size limit
+
+
+
+router.post("/convert-to-pdf", async (req, res) => {
+    try {
+        const { imageUrls } = req.body
+       
+        if (!imageUrls || imageUrls.length === 0) {
+            return res.status(400).json({ error: "No image URLs provided" });
+        }
+
+        const doc = new PDFDocument();
+        const buffers = [];
+
+        res.set({
+            "Content-Type": "application/pdf",
+            "Content-Disposition": "attachment; filename=converted.pdf",
+        });
+
+        doc.on("data", (chunk) => buffers.push(chunk));
+        doc.on("end", () => {
+            res.end(Buffer.concat(buffers));
+        });
+
+       
+        // Add images to PDF
+        for (let i = 0; i < imageUrls.length; i++) {
+            const response = await axios.get(imageUrls[i], { responseType: "arraybuffer" });
+            doc.image(response.data, { fit: [500, 700] });
+
+            // Add a new page only if this is NOT the last image
+            if (i < imageUrls.length - 1) {
+                doc.addPage();
+            }
+        }
+
+
+        doc.end();
+    } catch (error) {
+        console.error("PDF Conversion Error:", error);
+        res.status(500).json({ error: "Failed to convert images to PDF" });
+    }
 });
 
 
-router.post("/convert-to-pdf", upload.array("images", 10), convertImagesToPDF);
-router.get("/", (req, res) => {
-    res.send("Welcome to PDF Converter API");
-})
-
-export {router as psdRouter};
+export { router as psdRouter };
